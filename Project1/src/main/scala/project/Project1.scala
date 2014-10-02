@@ -16,24 +16,22 @@ case class Message(msg: String)
 class Worker extends Actor {
   println("Spawned worker")
   def receive = {
-
+    
     case RequestWork(ip) =>
       println("Connecting to Master for work at "+ip)
       val remote = context.actorSelection("akka.tcp://MasterBitcoinSystem@"+ip+":6000/user/Master")
       remote ! Message("GIVEWORK")
     case Message(msg) =>
-    //println(msg)
-     val array = msg.split('|')
-    if(array(0) == ("TAKEWORK")){
-      //println("Doing work now ..."+array(2))
-  
-     val k = array(1).toInt
-     val gatorId = array(2)
-     val start = array(3).toInt
-     val batchSize = array(4).toInt
-  
-      mineForCoins(k ,gatorId, start, batchSize)
-    }
+      //println(msg)
+      val array = msg.split('|')
+      if(array(0) == ("TAKEWORK")){
+        //println("Doing work now ..."+array(2))
+        val k = array(1).toInt
+        val gatorId = array(2)
+        val start = array(3).toInt
+        val batchSize = array(4).toInt
+        mineForCoins(k ,gatorId, start, batchSize)
+      }
   }
 
   def mineForCoins(k:Int, gatorId: String, start: Int, batchSize: Int) {
@@ -103,9 +101,9 @@ class Master(k: Int, gatorId: String, noOfWorker: Int, batchSize: Int, worker:Ac
   
   def receive = {
     case StartMining =>
-       val listener = context.actorOf(Props[Listener], name = "listener")
-       listener ! Message("START")
-     println("Master is Mining now ...")
+      val listener = context.actorOf(Props[Listener], name = "listener")
+      listener ! Message("START")
+      println("Master is Mining now ...")
       var i = noOfWorker
 //      while(i > 0){
       //println("spawn worker "+start)
@@ -115,12 +113,11 @@ class Master(k: Int, gatorId: String, noOfWorker: Int, batchSize: Int, worker:Ac
 //      }
 
    case Message(msg) =>
-        var arr = msg.toString.split('|')
-        if(arr(0) == "GIVEWORK"){
-          
-            //println("Giving work")
-            sender ! Message("TAKEWORK|"+k+"|"+gatorId+"|"+start+"|"+batchSize)
-            start= start + batchSize
+      var arr = msg.toString.split('|')
+      if(arr(0) == "GIVEWORK"){
+          //println("Giving work")
+          sender ! Message("TAKEWORK|"+k+"|"+gatorId+"|"+start+"|"+batchSize)
+          start= start + batchSize
         } else if(arr(0) == "FOUND"){
           bitcoinCount = bitcoinCount +1
           println(arr(1))
@@ -164,10 +161,8 @@ object Project1 extends App {
     val worker = system.actorOf(Props[Worker], name = "worker")  
     worker ! RequestWork(ip)
 
-  }
-  else{
+  } else {
     println("Normal mode Running...")
-
     val gatorId = "pratik.s"
     val batchSize = 50000
     val k  = args(0).toInt
